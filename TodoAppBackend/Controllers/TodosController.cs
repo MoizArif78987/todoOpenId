@@ -43,7 +43,7 @@ public class TodosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUserTodos()
+    public async Task<IActionResult> GetUserTodos(int pageNumber = 1)
     {
         var user = await _userManager.GetUserAsync(User);
         var userId = await _userManager.GetUserIdAsync(user);
@@ -53,12 +53,16 @@ public class TodosController : ControllerBase
             return Unauthorized();
         }
 
+        const int pageSize = 5;
         var todos = await _dbContext.Todos
             .Where(t => t.UserId == userId && t.DeletedAt == null)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         return Ok(todos);
     }
+
 
     [HttpPut("{todoId}")]
     [ServiceFilter(typeof(LoggedInUserAttribute))]
